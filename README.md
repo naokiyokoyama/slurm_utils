@@ -1,6 +1,6 @@
-#slurm_utils
+# slurm_utils
 
-##Installation
+## Installation
 ```bash
 # Make sure you are in the root of this repo
 pip install -e .
