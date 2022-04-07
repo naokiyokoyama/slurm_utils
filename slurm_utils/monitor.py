@@ -23,6 +23,7 @@ class SlurmMonitor:
     def __init__(self, cooldown_seconds=COOLDOWN_SECONDS):
         self.last_peek = 0
         self.latest_info = None
+        self.silence_prints = False
         self.cooldown_seconds = cooldown_seconds
 
     def refresh(self, silent=False):
@@ -68,6 +69,6 @@ class SlurmMonitor:
         row = self.latest_info[self.latest_info["JOBID"] == job_id]
         return row.to_dict("records")[0]
 
-    @staticmethod
-    def print(*args):
-        print("[slurm_utils.monitor]:", *args)
+    def print(self, args):
+        if not self.silence_prints:
+            print("[slurm_utils.monitor]:", *args)
