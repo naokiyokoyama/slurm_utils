@@ -11,7 +11,6 @@ COOLDOWN_SECONDS = 120
 
 
 def line_to_list(line):
-    # Replace any single spaces with a dummy value
     final_line = ""
     for idx, letter in enumerate(line):
         if letter != " " or idx > 0 and line[idx - 1] != " ":
