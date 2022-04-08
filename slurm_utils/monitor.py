@@ -9,13 +9,17 @@ COOLDOWN_SECONDS = 120
 # Header looks like this:
 #    JOBID  PARTITION                     NAME    ST NODELIST(REASON)
 
+DUMMY_VALUE = "4123kjhgkjhg156298"
+
 
 def line_to_list(line):
     final_line = ""
     for idx, letter in enumerate(line):
         if letter != " " or idx > 0 and line[idx - 1] != " ":
             final_line += letter
-    return final_line.split(" ")
+        else:
+            final_line += DUMMY_VALUE
+    return [i.replace(DUMMY_VALUE, " ") for i in final_line.split()]
 
 
 class SlurmMonitor:
