@@ -15,10 +15,14 @@ DUMMY_VALUE = "4123kjhgkjhg156298"
 def line_to_list(line):
     final_line = ""
     for idx, letter in enumerate(line):
-        if letter != " " or idx > 0 and line[idx - 1] != " ":
+        if letter != " ":
             final_line += letter
-        else:
+        elif letter == " " and not (
+            idx > 0 and line[idx - 1] == " " or idx < len(line) and line[idx + 1] == " "
+        ):
             final_line += DUMMY_VALUE
+        else:
+            final_line += " "
     return [i.replace(DUMMY_VALUE, " ") for i in final_line.split()]
 
 
