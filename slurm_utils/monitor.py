@@ -33,8 +33,8 @@ class SlurmMonitor:
         self.silence_prints = False
         self.cooldown_seconds = cooldown_seconds
 
-    def refresh(self, silent=False):
-        if time.time() - self.last_peek > self.cooldown_seconds:
+    def refresh(self, silent=False, force=False):
+        if force or time.time() - self.last_peek > self.cooldown_seconds:
             data = subprocess.check_output(SLURM_CMD, shell=True).decode("utf-8")
             self.last_peek = time.time()
             self.latest_info = pd.DataFrame(
