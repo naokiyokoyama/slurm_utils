@@ -76,6 +76,6 @@ class SlurmMonitor:
         row = self.latest_info[self.latest_info["JOBID"] == job_id]
         return row.to_dict("records")[0]
 
-    def print(self, args):
+    def print(self, *args):
         if not self.silence_prints:
             print("[slurm_utils.monitor]:", *args)
