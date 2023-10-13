@@ -22,10 +22,11 @@ if not osp.exists(POLL_FOLDER):
     os.mkdir(POLL_FOLDER)
 
 
-def poll():
+def poll(output_file: str = ""):
     from slurm_utils.monitor import SlurmMonitor
 
-    cooldown = 60 * 5  # 5 minutes
+    # cooldown = 60 * 5  # 5 minutes
+    cooldown = 60 * 1  # 1 minute
     monitor = SlurmMonitor(cooldown)
     first_time = True
     while True:
@@ -97,14 +98,17 @@ def poll():
                     os.remove(file)  # remove stale files for past jobs
 
                 # Notify user about the error
-                full_error_msg = f"Error found:" if first_time else f"ERROR FOUND:"
+                full_error_msg = "Error found:" if first_time else "ERROR FOUND:"
                 full_error_msg += (
-                    f" (NOT resubmitted):"
+                    " (NOT resubmitted):"
                     if sbatch_script_full is None
-                    else f" (resubmitted):"
+                    else " (resubmitted):"
                 )
                 full_error_msg += error_msg
                 print(full_error_msg)
+                if output_file != "":
+                    with open(output_file, "a") as f:
+                        f.write(full_error_msg + "\n")
 
             if job_id not in monitor.get_all_job_ids() and osp.isfile(file):
                 os.remove(file)  # remove stale files for past jobs
@@ -150,8 +154,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--register", action="store_true")
     parser.add_argument("-n", "--name", type=str, default="")
+    parser.add_argument(
+        "-o",
+        "--output-file",
+        type=str,
+        default="",
+        help="Where error messages will be written to.",
+    )
     args = parser.parse_args()
     if args.register:
         register(args.name)
     else:
-        poll()
+        poll(args.output_file)
