@@ -124,7 +124,7 @@ class StuckJobKiller:
     def poll(self):
         self._monitor.refresh()
         slurm_job_ids_and_files = self._get_slurm_job_ids_and_files()
-        active_job_ids = self._monitor.get_all_job_ids()
+        active_job_ids = [int(i) for i in self._monitor.get_all_job_ids()]
 
         # Purge the error monitor of inactive jobs
         self._error_monitor.purge_inactive(active_job_ids)
