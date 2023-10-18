@@ -35,7 +35,7 @@ class ErrorMonitor:
     file does not change for a long time, then we know that the job is stuck.
     """
 
-    def __init__(self, stale_time: int = 60 * 10):
+    def __init__(self, stale_time: int = 60 * 30):
         self._stale_time = stale_time
         self._error_contents: Dict[int, Tuple[float, str]] = {}
 
@@ -151,6 +151,13 @@ class StuckJobKiller:
                 # different nodes with different times. Instead, we check if the file
                 # contents have changed since the last time we checked.
                 error_msg += "Job is stuck."
+
+                # If the job is stuck, we need to delete its .slurm_job file, so that
+                # this script doesn't keep checking it.
+                try:
+                    os.remove(file)
+                except FileNotFoundError:
+                    pass
             else:
                 error_occurred = False
 
