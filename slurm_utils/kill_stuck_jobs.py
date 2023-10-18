@@ -165,7 +165,7 @@ class StuckJobKiller:
                 # TODO: don't assume sbatch script is always 'submit_dir/train.sh'
                 sbatch_script = "train.sh"
 
-                if str(job_id) in active_job_ids:  # kill the job
+                if job_id in active_job_ids:  # kill the job
                     subprocess.check_call(f"scancel {job_id}", shell=True)
                 subprocess.check_call(
                     f"sbatch {sbatch_script}",
