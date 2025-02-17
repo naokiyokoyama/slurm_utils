@@ -1,30 +1,36 @@
 import os
 import subprocess
 import time
-
-import numpy as np
 import pandas as pd
+import numpy as np
 
-SLURM_CMD = 'squeue -u $USER --format "%.100i %.100P %.100j %.100t %.100R"'
 COOLDOWN_SECONDS = 120
-# Header looks like this:
-#    JOBID  PARTITION                     NAME    ST NODELIST(REASON)
-
-DUMMY_VALUE = "4123kjhgkjhg156298"
 
 
-def line_to_list(line):
-    final_line = ""
-    for idx, letter in enumerate(line):
-        if letter != " ":
-            final_line += letter
-        elif letter == " " and not (
-            idx > 0 and line[idx - 1] == " " or idx < len(line) and line[idx + 1] == " "
-        ):
-            final_line += DUMMY_VALUE
-        else:
-            final_line += " "
-    return [i.replace(DUMMY_VALUE, " ") for i in final_line.split()]
+def get_squeue_data():
+    """
+    Executes squeue command for current user and returns results as a pandas DataFrame.
+    Uses a tab separator for reliable parsing without JSON.
+    """
+    cmd = f'squeue -u {os.environ["USER"]} -o "%i\\t%P\\t%j\\t%t\\t%R"'
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+
+    try:
+        # Split output into lines and parse using tabs as delimiter
+        lines = result.stdout.strip().split("\n")
+
+        # Create DataFrame using tab separator
+        df = pd.DataFrame(
+            [line.split("\\t") for line in lines[1:]],  # Skip header
+            columns=["JOBID", "PARTITION", "NAME", "ST", "NODELIST(REASON)"],
+        )
+
+        return df
+    except Exception as e:
+        print(f"Error parsing squeue output: {e}")
+        return pd.DataFrame(
+            columns=["JOBID", "PARTITION", "NAME", "ST", "NODELIST(REASON)"]
+        )
 
 
 class SlurmMonitor:
@@ -76,57 +82,3 @@ class SlurmMonitor:
     def print(self, *args):
         if not self.silence_prints:
             print("[slurm_utils.monitor]:", *args)
-
-
-def get_squeue_data():
-    """
-    Executes squeue command for current user and returns results as a pandas DataFrame.
-
-    Returns:
-        pandas.DataFrame: Contains job queue information with columns:
-        JOBID, PARTITION, NAME, ST (status), and NODELIST(REASON)
-    """
-    # Run the squeue command and capture output
-    cmd = [
-        "squeue",
-        "-u",
-        os.environ["USER"],
-        "--format",
-        "%.100i %.100P %.100j %.100t %.100R",
-    ]
-    result = subprocess.run(cmd, capture_output=True, text=True)
-
-    # Split output into lines
-    lines = result.stdout.strip().split("\n")
-
-    # Find the column positions by looking at the header
-    header = lines[0]
-    col_positions = []
-    start = 0
-
-    # Get the starting position of each column
-    for col in ["JOBID", "PARTITION", "NAME", "ST", "NODELIST(REASON)"]:
-        pos = header.find(col, start)
-        col_positions.append(pos)
-        start = pos + 1
-
-    # Add the end position
-    col_positions.append(len(header))
-
-    # Parse each line using the column positions
-    data = []
-    for line in lines[1:]:  # Skip header
-        row = []
-        for i in range(len(col_positions) - 1):
-            start = col_positions[i]
-            end = col_positions[i + 1]
-            value = line[start:end].strip()
-            row.append(value)
-        data.append(row)
-
-    # Create DataFrame with the correct column names
-    df = pd.DataFrame(
-        data, columns=["JOBID", "PARTITION", "NAME", "ST", "NODELIST(REASON)"]
-    )
-
-    return df
